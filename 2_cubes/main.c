@@ -8,6 +8,12 @@
 // we need to determine which of the games would have been
 // possible and determine the sum of the IDs of those games
 
+// Part 2: determine the minimum number of cubes available to make the set
+// of game results possible.  Determine the "power" of the set of cubes for each
+// game (i.e., the numbers of each type of cube multiplied together)
+// and return the sum of these powers
+
+
 #include <stdio.h>
 #include <ctype.h>
 
@@ -18,7 +24,7 @@
 
 int main(void) {
 
-    int id_total = 0, id, is_viable;
+    int id_total = 0, id, is_viable, power_total = 0, green_max, blue_max, red_max;
     FILE *file;
     char line[LINE_LENGTH];
     char *p;
@@ -32,6 +38,9 @@ int main(void) {
 
     while (fgets(line, LINE_LENGTH, file)) {  // Iterate through line by line
         id = 0;
+        red_max = 0;
+        blue_max = 0;
+        green_max = 0;
         p = line;
 
         // Iterate until hitting the ID
@@ -73,18 +82,27 @@ int main(void) {
                 case 'g': {
                     if (count > GREEN_COUNT) {
                         is_viable = 0;
-                    }    
+                    } 
+                    if (count > green_max) {
+                        green_max = count;
+                    }
                     break;
                 }
                 case 'b':{
                     if (count > BLUE_COUNT) {
                         is_viable = 0;
                     }
+                    if (count > blue_max) {
+                        blue_max = count;
+                    }
                     break;
                 }
                 case 'r':{
                     if (count > RED_COUNT) {
                         is_viable = 0;
+                    }
+                    if (count > red_max) {
+                        red_max = count;
                     }
                     break;
                 }
@@ -97,12 +115,15 @@ int main(void) {
 
         if (is_viable == 1) {
             id_total += id;
-        } 
+        }
+
+        power_total = power_total + (red_max * green_max * blue_max);
     }
 
     fclose(file);
 
-    printf("%d\n", id_total);
+    printf("ID total: %d\n", id_total);
+    printf("Power total: %d\n", power_total);
 
     return 0;
 }
