@@ -34,7 +34,9 @@ int main(void) {
 
 
     part_total = determine_engine_part_total_for_schematic(file_buffer);
+    int gear_total = determine_gear_total(file_buffer);
 
-    printf("%d\n", part_total);
+    printf("part total %d\n", part_total);
+    printf("gear total %d\n", gear_total);
 
 }

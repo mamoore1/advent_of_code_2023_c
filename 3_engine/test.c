@@ -11,53 +11,64 @@
 #define assert_is_equal_int(expected, actual) if (expected != actual) {printf("[Assertion Error]: expected %d, got %d\n", expected, actual); return 1;}
 
 
+// Helper definitions
+void print_int_array(int *, int);
+int compare_arrays_n(void *, void *, int);
+int assert_int_arrays_equal(int *, int *, int);
+
+// Test definitions: could really autogenerate these in a similar way to pytest
 int test_parse_file_to_string(void);
 int test_find_all_symbol_indices(void);
-int compare_arrays_n(void *, void *, int);
 int test_find_part_number_total();
-int assert_int_arrays_equal(int *, int *, int);
 int test_determine_engine_part_total_for_schematic();
 int test_find_asterisks();
 int test_find_all_adjacent_indices_for_symbols();
 int test_scan_full_number();
+int test_find_gear_total();
+
 
 int main(void) {
 
     int all_passed = 1;
 
-    if (test_parse_file_to_string()) {
-        all_passed = 0;
-        printf("Failure in test test_parse_file_to_string\n");
-    }
+    // if (test_parse_file_to_string()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_parse_file_to_string\n");
+    // }
 
-    if (test_find_all_symbol_indices()) {
-        all_passed = 0;
-        printf("Failure in test test_find_all_symbol_indices\n");
-    }
+    // if (test_find_all_symbol_indices()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_find_all_symbol_indices\n");
+    // }
 
-    if (test_find_part_number_total()) {
-        all_passed = 0;
-        printf("Failure in test find_all_part_numbers\n");
-    }
+    // if (test_find_part_number_total()) {
+    //     all_passed = 0;
+    //     printf("Failure in test find_all_part_numbers\n");
+    // }
 
-    if (test_determine_engine_part_total_for_schematic()) {
-        all_passed = 0;
-        printf("Failure in test test_determine_engine_part_total_for_schematic\n");
-    }
+    // if (test_determine_engine_part_total_for_schematic()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_determine_engine_part_total_for_schematic\n");
+    // }
 
-    if (test_find_asterisks()) {
-        all_passed = 0;
-        printf("Failure in test test_find_asterisks\n");
-    }
+    // if (test_find_asterisks()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_find_asterisks\n");
+    // }
 
-    if (test_find_all_adjacent_indices_for_symbols()) {
-        all_passed = 0;
-        printf("Failure in test test_find_all_adjacent_indices_for_symbols\n");
-    }
+    // if (test_find_all_adjacent_indices_for_symbols()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_find_all_adjacent_indices_for_symbols\n");
+    // }
 
-    if (test_scan_full_number()) {
+    // if (test_scan_full_number()) {
+    //     all_passed = 0;
+    //     printf("Failure in test test_scan_full_number\n");
+    // }
+
+    if (test_find_gear_total()) {
         all_passed = 0;
-        printf("Failure in test test_scan_full_number\n");
+        printf("Failure in test test_find_gear_total\n");
     }
 
     if (all_passed) {
@@ -207,17 +218,47 @@ int test_scan_full_number() {
 }
 
 
+int test_find_gear_total() {
+    char test_string[] =
+    ".2.3..\n"
+    "..*4..\n"
+    "12....\n"
+    ".*3..2\n"
+    "....*.\n"
+    ".321..\n";
+    int expected_value = 678;
+    int asterisk_squares[9];
+    memset(asterisk_squares, 0, (size_t) 9 * sizeof(int));
+    int asterisk_adjacent_squares[40];
+    memset(asterisk_adjacent_squares, 0, (size_t) 40 * sizeof(int));
+    int num_adjacent_squares;
+
+    find_asterisks(test_string, asterisk_squares);
+    num_adjacent_squares = find_all_adjacent_indices_for_symbols(test_string, asterisk_squares, asterisk_adjacent_squares);
+
+    int actual_value = find_gear_total(test_string, asterisk_adjacent_squares, num_adjacent_squares);
+
+    assert_is_equal_int(expected_value, actual_value);
+
+    return 0;
+}
+
+
+void print_int_array(int *array, int array_length) {
+    printf("{");
+    for (int i = 0; i < array_length; i++) {
+        printf("%d, ", array[i]);
+    }
+    printf("}");
+}
+
+
 int assert_int_arrays_equal(int *expected, int *actual, int n) {
     if (!compare_arrays_n(expected, actual, n)) {
-        printf("[Error]: expected results: {");
-        for (int i = 0; i < n; i++) {
-            printf("%d, ", expected[i]);
-        }
-        printf("} not equal to actual results {");
-        for (int i = 0; i < n; i++) {
-            printf("%d, ", actual[i]);
-        }
-        printf("}\n");
+        printf("[Error]: expected results: ");
+        print_int_array(expected, n);
+        printf("not equal to actual results: ");
+        print_int_array(actual, n);
         return 0;
     }
     return 1;

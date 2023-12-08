@@ -158,69 +158,75 @@ int scan_full_number(char *engine_schematic, int number_index) {
 
 int find_gear_total(char *engine_schematic, int *asterisk_adjacent_squares, int num_squares) {
 
+    int squares_index = 0;
+    int column_index;
+    int in_number = 0;
+    int current_total;
+    int gear_total = 0;
+    int row_index;
+    int number_count;
+
     if (num_squares % 9 != 0) {
         printf("There should be 9 squares per asterisk");
         return 1;
     }
 
-    while (1) {
-
+    // Go through all the indices of adjacent squares
+    while (squares_index < num_squares) {
+        current_total = 1;  // The total for this gear, if it is a gear
+        number_count = 0;  // The number of numbers found in this square; 2 means it's a gear
+        // Work through these in 3 groups of 3
+        for (row_index = 0; row_index < 3; row_index++) {
+            in_number = 0;
+            for (column_index = 0; column_index < 3; column_index++) {
+                // Current square value
+                if isdigit(engine_schematic[asterisk_adjacent_squares[squares_index + (3 * row_index) + column_index]]) {
+                    // To avoid problems in cases where a row ends in a column
+                    // determine this immediately
+                    if (!in_number) {
+                        in_number = 1;
+                        int full_number = scan_full_number(engine_schematic, asterisk_adjacent_squares[squares_index + (3 * row_index) + column_index]);
+                        current_total *= full_number;
+                        number_count += 1;
+                    }
+                }
+                else {
+                    in_number = 0;
+                }
+                
+            }
+        }
+        if (number_count == 2) {
+            gear_total += current_total;
+        }
+        squares_index += 9;
     }
 
-    return 0;
+    return gear_total;
 }
 
 
-/* Find all the asterisk indices, find all the adjacent squares, check these squares for numbers,
- and generate a new list from this, which can be passed to an adapted version of find part number
- total (i.e., we're using a check on which asterisk adjacent squares contain numbers to determine)
- a new list of squares to check for numbers, i.e., related logic to the solution for part 1)
- 
- Actually we need to do more updating to the logic, because we need to find asterisks with exactly
- two adjacent squares, so we need a way of tracking how many numbers are adjacent to the asterisks. We could
- do this with another array, but it is becoming quite hard to map adjacent squares back to the inital square.
- 
- I initially avoided the approach of determining the numbers and then checking the squares around them (to avoid
- having to deal with the fact this is a 2D array), but I wonder if I've gone the wrong way.
- 
- Although, to be honest, if I was working in python I would just define an object with a field that contained
- a list of adjacent squares. That obviously wouldn't be the fastest way to do it, but it would work. I could
- use a struct for the same purpose here.
- 
- However, a hacky way to do this would be to notice that it is actually possible to map a specific asterisk
- back to it's set of squares; given that there will always be 9 adjacent squares (due to the convenient fact
- that there are no asterisks in edge rows), the first adjacent square will always be at the asterisks index 
- position - (line length + 1). E.g., if there is an asterisk at 141 and the line-length is 140, the first
- square will be 0. This doesn't particularly help actually.
- 
- My thought is that we a) get a list of the asterisk squares, b) get a list of the numbers and their locations
- and then look for the overlap. The problem is that the numbers obviously can overlap on a number of different
- digits, so it's not that simple. After finding the number, you'd have to scan each way along the number to
- find it's total, which is kind of a pain, especially because numbers go up to the edge, so you need to make sure
- not to go too far (although nb that they're never at the actual start and end, so they'll always be bounded by
- \n)
-
- So my new plan: 
- 1) find all the asterisk adjacent squares
+/* 1) find all the asterisk adjacent squares
  2) go through all the asterisk adjacent squares:
     a) check whether they contain precisely 2 numbers (that'll be more complicated, because you need to check it's not the same number
     in multiple squares)
         i) if they do, scan along these numbers to determine what they are, and then multiply the two numbers and add them to the total
 
-1) is already implemented, now need to implement 2
-
-
+ NB. this approach was very unstable and sensitive to things like garbage data. Need to keep better track of integer array lengths (possibly)
+ worth implementing something like a linked list 
  */
-int find_gears(char *engine_schematic) {
+int determine_gear_total(char *engine_schematic) {
     int asterisk_squares[SYMBOL_COUNT];
+    memset(asterisk_squares, 0, (size_t) SYMBOL_COUNT * sizeof(int));
     int asterisk_adjacent_squares[ADJACENT_COUNT];
+    memset(asterisk_squares, 0, (size_t) ADJACENT_COUNT * sizeof(int));
+    int num_adjacent_squares;
 
     // Find all the potential gears
     find_asterisks(engine_schematic, asterisk_squares);
     // Find the squares adjacent to the potential gears
-    find_all_adjacent_indices_for_symbols(engine_schematic, asterisk_squares, asterisk_adjacent_squares);
+    num_adjacent_squares = find_all_adjacent_indices_for_symbols(engine_schematic, asterisk_squares, asterisk_adjacent_squares);
 
     // Go through the numbers and check which ones are in adjacent squares
-
-    return 0;
+    return find_gear_total(engine_schematic, asterisk_adjacent_squares, num_adjacent_squares);
 }

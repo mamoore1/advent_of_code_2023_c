@@ -12,5 +12,7 @@ int determine_engine_part_total_for_schematic(char *);
 int find_asterisks(char *, int *);
 int find_all_adjacent_indices_for_symbols(char *, int *, int *);
 int scan_full_number(char *, int);
+int find_gear_total(char *, int *, int);
+int determine_gear_total(char *);
 
 #endif
