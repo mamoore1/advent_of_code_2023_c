@@ -23,8 +23,7 @@ int main(void) {
 
     FILE *file;
     char file_buffer[FILE_LENGTH];
-    int symbol_locations[SYMBOL_COUNT];
-    int symbol_count;
+    int part_total;
 
     if ((file = fopen("input.txt", "r")) == NULL) {
         printf("Failed to open input file\n");
@@ -32,13 +31,10 @@ int main(void) {
     }
 
     parse_file_to_string(file, file_buffer, FILE_LENGTH);
-    find_all_symbol_indexes(file_buffer, symbol_locations);
 
-    while (symbol_locations[symbol_count] != 0) {
-        symbol_count++;
-    }
-    if (symbol_count >= SYMBOL_COUNT) {
-        printf("[Warning]: symbol count equals the max symbol count; consider increasing this value");
-    }
+
+    part_total = determine_engine_part_total_for_schematic(file_buffer);
+
+    printf("%d\n", part_total);
 
 }
