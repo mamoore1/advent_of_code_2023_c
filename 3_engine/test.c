@@ -3,54 +3,66 @@
 // This is going to be difficult to test manually, so we want some actual
 // tests
 
-#include <assert.h>
 #include <string.h>
 #include "check_engine.h"   
 #include "parse.h"
 
-int assert_true(int);
+
+#define assert_is_equal_int(expected, actual) if (expected != actual) {printf("[Assertion Error]: expected %d, got %d\n", expected, actual); return 1;}
+
+
 int test_parse_file_to_string(void);
-int test_find_all_symbol_indexes(void);
+int test_find_all_symbol_indices(void);
 int compare_arrays_n(void *, void *, int);
-int test_find_all_symbol_adjacent_indexes();
 int test_find_part_number_total();
 int assert_int_arrays_equal(int *, int *, int);
 int test_determine_engine_part_total_for_schematic();
+int test_find_asterisks();
+int test_find_all_adjacent_indices_for_symbols();
+int test_scan_full_number();
 
 int main(void) {
 
     int all_passed = 1;
 
-    if (!test_parse_file_to_string()) {
+    if (test_parse_file_to_string()) {
         all_passed = 0;
         printf("Failure in test test_parse_file_to_string\n");
     }
 
-    if (!test_find_all_symbol_indexes()) {
+    if (test_find_all_symbol_indices()) {
         all_passed = 0;
-        printf("Failure in test test_find_all_symbol_indexes\n");
+        printf("Failure in test test_find_all_symbol_indices\n");
     }
 
-    if (!test_find_all_symbol_adjacent_indexes()) {
-        all_passed = 0;
-        printf("Failure in test test_find_all_symbol_adjacent_indexes\n");
-    }
-
-    if (!test_find_part_number_total()) {
+    if (test_find_part_number_total()) {
         all_passed = 0;
         printf("Failure in test find_all_part_numbers\n");
     }
 
-    if (!test_determine_engine_part_total_for_schematic()) {
+    if (test_determine_engine_part_total_for_schematic()) {
         all_passed = 0;
         printf("Failure in test test_determine_engine_part_total_for_schematic\n");
+    }
+
+    if (test_find_asterisks()) {
+        all_passed = 0;
+        printf("Failure in test test_find_asterisks\n");
+    }
+
+    if (test_find_all_adjacent_indices_for_symbols()) {
+        all_passed = 0;
+        printf("Failure in test test_find_all_adjacent_indices_for_symbols\n");
+    }
+
+    if (test_scan_full_number()) {
+        all_passed = 0;
+        printf("Failure in test test_scan_full_number\n");
     }
 
     if (all_passed) {
         printf("All tests passed!\n");
     }
-
-    return 0;
 }
 
 
@@ -62,72 +74,89 @@ int test_parse_file_to_string() {
     // Test parse_file_to_string
     if (parse_file_to_string(file, buffer, len_buffer) == 0) {
         printf("Failed to parse file");
+        return 1;
     }
     fclose(file);
 
-    if (!(strlen(buffer) == 704)) {
-        printf("[Error]: buffer length %ld != expected length %d\n", strlen(buffer), 704);
-        return 0;
-    }
-
-    return 1;
+    assert_is_equal_int((int) strlen(buffer), 704)
+    return 0;
 }
 
 
-int test_find_all_symbol_indexes() {
-    char test_string[] = 
+int test_find_all_symbol_indices() {
+    char test_string[] =
     "...*\n"
     ".../\n"
     "...*\n"
     "...%\n"
     "....\0";
-
-    int expected_results[] = {3, 8, 13, 18};
+    int expected_length = 4;
+    int expected_indices[] = {3, 8, 13, 18};
     int actual_results[4];
     int actual_length;
 
-    actual_length = find_all_symbol_indexes(test_string, actual_results);
+    actual_length = find_all_symbol_indices(test_string, actual_results);
 
-    if (!compare_arrays_n(expected_results, actual_results, 4)) {
-        printf("[Error]: expected results: {");
-        for (int i = 0; i < 4; i++) {
-            printf("%d, ", expected_results[i]);
-        }
-        printf("} not equal to actual results {");
-        for (int i = 0; i < 4; i++) {
-            printf("%d, ", actual_results[i]);
-        }
-        printf("}\n");
-        return 0;
-    } else if (actual_length != 4) {
-        printf("[Error]: expected length 4, got %d", actual_length);
+    if (!assert_int_arrays_equal(expected_indices, actual_results, actual_length)) {
+        return 1;
     }
+    assert_is_equal_int(expected_length, actual_length)
+    assert_is_equal_int(4, actual_length)
 
-    return 1;
+    return 0;
 }
 
 
-int test_find_all_symbol_adjacent_indexes() {
+int test_find_asterisks() {
+    char test_string[] = 
+    ".....\n"
+    ".*./.\n"
+    "..&.*\n"
+    ".-.*.\n"
+    "..=..\n";
+    int expected_indices[] = {7, 16, 21};
+    int expected_length = 3;
+    int actual_results[4];
+    memset(actual_results, 0, (size_t) 4 * sizeof(int));
+    int actual_length;
+
+    actual_length = find_asterisks(test_string, actual_results);
+
+    if (!assert_int_arrays_equal(expected_indices, actual_results, actual_length)) {
+        return 1;
+    }
+    assert_is_equal_int(expected_length, actual_length);
+
+    return 0;
+}
+
+
+int test_find_all_adjacent_indices_for_symbols() {
+
     char test_string[] = 
     "....\n"
     ".*..\n"
     "....\n"
     "....\0";
     int expected_results[] = {0, 1, 2, 5, 6, 7, 10, 11, 12};
-    int actual_results[9];
-    int actual_length;
+    int actual_results[12];
+    memset(actual_results, 0, (size_t) 12 * sizeof(int));
+    int actual_length = 0;
 
-    actual_length = find_all_symbol_adjacent_indexes(test_string, actual_results, 9);
+    int symbols[1];
+    memset(symbols, 0, (size_t) 1 * sizeof(int));
 
-    if (!assert_int_arrays_equal(expected_results, actual_results, 9)) {
-        return 0;
-    } else if (actual_length != 9) {
-        printf("[Error]: expected length 9, got %d", actual_length);
-        return 0;
+    find_all_symbol_indices(test_string, symbols);
+    actual_length = find_all_adjacent_indices_for_symbols(test_string, symbols, actual_results);
+    
+    if (!assert_int_arrays_equal(expected_results, actual_results, actual_length)) {
+        return 1;
     }
+    assert_is_equal_int(9, actual_length);
 
-    return 1;
+    return 0;
 }
+
 
 
 // Check that we correctly find all part numbers, i.e., numbers in the string that are next
@@ -142,12 +171,9 @@ int test_find_part_number_total() {
     int adjacent_symbols[] = {6, 7, 8, 9, 11, 12, 13, 14, 16, 17, 18, 19};
 
     int total = find_part_number_total(test_string, adjacent_symbols, 12);
+    assert_is_equal_int(19, total);
 
-    if (total != 19) {
-        printf("[Error]: expected total 39, got %d\n", total);
-    }
-
-    return 1;
+    return 0;
 }
 
 
@@ -160,13 +186,24 @@ int test_determine_engine_part_total_for_schematic() {
     fclose(file);
 
     int total = determine_engine_part_total_for_schematic(buffer);
+    assert_is_equal_int(13463, total)
 
-    if (total != 13463) {
-        printf("[Error]: expected total 8535, got %d\n", total);
-        return 0;
-    }
+    return 0;
+}
 
-    return 1;
+
+int test_scan_full_number() {
+    char test_string[] =
+    ".1.2..\n"
+    ".23.4.\n"
+    "..567.\n";
+    int index = 10;
+    int expected_value = 23;
+
+    int actual_value = scan_full_number(test_string, index);
+    assert_is_equal_int(expected_value, actual_value)
+
+    return 0;
 }
 
 
@@ -194,6 +231,5 @@ int compare_arrays_n(void *first, void *second, int n) {
             return 0;
         }
     }
-
     return 1;
 }

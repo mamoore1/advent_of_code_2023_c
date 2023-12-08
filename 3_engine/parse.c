@@ -12,4 +12,6 @@ int parse_file_to_string(FILE *file, char *destination, int length) {
         destination[index++] = c;
     }
     destination[index] = '\0';
+
+    return index;
 }
